@@ -1,30 +1,94 @@
-/*
-
-1. Дістати рефи та апі-ключ.
-2. Підключити бібліотеки (axios, slimselectjs, cssloaders, Notiflix).
-3. Дати запит до ресурсу при події лоад щоб підгрузити породи котів
-    3.1. Відобразити опції в ХТМЛ для користувача. Треба використати insertAdjaccentHTML щоб прикріпити всі породи як опції до елемента селект (окремі елементи option).
-    3.2. Необхідно наповнити select.breed-select опціями так, щоб value опції містило id породи, а в інтерфейсі користувачеві відображалася назва породи. 
-    3.3. Напиши функцію fetchBreeds(), яка виконує HTTP-запит і повертає проміс із масивом порід - результатом запиту. Винеси її у файл cat-api.js та зроби іменований експорт.
-4. Коли користувач обирає якусь опцію в селекті (подія сабміт), необхідно виконувати запит за повною інформацією про кота на ресурс.
-    4.1. Використати ось цей формат для запиту : https://api.thecatapi.com/v1/images/search?breed_ids=ідентифікатор_породи
-    4.2. Напиши функцію fetchCatByBreed(breedId), яка очікує ідентифікатор породи, робить HTTP-запит і повертає проміс із даними про кота - результатом запиту. Винеси її у файл cat-api.js і зроби іменований експорт.
-    4.3. В елементі div.cat-info має відображатися картинка та інформація про кота (назва породи, опис і темперамент).
-5. Додати опрацювання завантаження.Використовувати метод finally() на фетчі.
-    5.1. Поки виконується запит за списком порід, необхідно приховати select.breed-select та показати p.loader.
-    5.2. Поки виконується запит за інформацією про кота, необхідно приховати div.cat-info та показати p.loader. 
-    5.3. Як тільки будь-який запит завершився, p.loader треба приховати.
-6. Додати опрацювання помилок, необхідно відобразити елемент p.error, а при кожному наступному запиті приховувати його.
-7. Додати стилізацію черех підключені бібліотеки.
-    7.1. Додай мінімальне оформлення елементів інтерфейсу. Використовуй для цього додаткові CSS класи в файлі styles.css.
-    7.2. Замість select.breed-select можеш використовувати будь-яку бібліотеку з красивими селектом, наприклад https://slimselectjs.com/
-    7.3. Замість p.loader можеш використовувати будь-яку бібліотеку з красивими CSS-завантажувачами, наприклад https://cssloaders.github.io/ 
-    7.4. Завантажувач p.error можеш використовувати будь-яку бібліотеку з гарними сповіщеннями, наприклад Notiflix
-
-
-*/
-
 import SlimSelect from 'slim-select';
+
 import Notiflix from 'notiflix';
-import fetchBreeds from './cat-api';
-import fetchCatByBreed from './cat-api';
+
+import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
+
+const refs = {
+    breedSelect: document.querySelector(".breed-select"),
+    loaderEl: document.querySelector(".loader"),
+    catInfoEl: document.querySelector(".cat-info"),
+};
+
+const { breedSelect, loaderEl, catInfoEl } = refs;
+
+addEventListener("load", onLoad);
+
+function onLoad() {   
+
+    fetchBreeds()
+        .then(resp => {
+            breedSelect.insertAdjacentHTML("afterbegin",
+            `
+            <option value="" disabled selected hidden>
+            🐱Choose Your Cat🐱
+            </option>
+            `);
+            breedSelect.insertAdjacentHTML("beforeend", fillOptions(resp.data));
+            breedSelect.classList.remove("hidden");
+
+            // new SlimSelect({
+            // select: document.querySelector('.breed-select')
+            // });
+        })
+        .catch(err => {
+            loaderEl.classList.add("hidden");
+
+            Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!', {
+                timeout: 60000,
+                fontSize: '28px',
+                width: "450px"
+            });
+        })
+        .finally(() => {
+            loaderEl.classList.add("hidden");
+        });
+};
+
+function fillOptions(cats) {
+    return cats.map(cat => `<option value="${cat.id}">
+    ${cat.name}
+    </option>`
+    )
+        .join("");
+};
+
+breedSelect.addEventListener("input", onInput);
+
+function onInput({currentTarget }) {
+
+    loaderEl.classList.remove("hidden");
+    catInfoEl.classList.add("hidden");
+
+
+    fetchCatByBreed(currentTarget.value)
+        .then(resp => {
+            catInfoEl.innerHTML = displayInfo(resp.data[0]);
+            catInfoEl.classList.remove("hidden");
+        })
+        .catch(err => {
+            loaderEl.classList.add("hidden");
+            catInfoEl.classList.add("hidden");
+
+            Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!', {
+                timeout: 60000,
+                fontSize: '28px',
+                width: "450px"
+            });
+        })
+        .finally(() => {
+            loaderEl.classList.add("hidden");
+        });
+}
+
+function displayInfo(cat) {
+    
+    return `
+    <img src = ${cat.url} class="cat_img">
+    <div class="cat_text">
+        <h2 class="cat_name">${cat.breeds[0].name}</h2>
+        <h3 class="cat_temp">${cat.breeds[0].temperament}</h3>
+        <p class="cat_desc">${cat.breeds[0].description}</p>
+    </div>
+    `
+};

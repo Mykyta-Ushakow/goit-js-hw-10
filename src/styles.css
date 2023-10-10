@@ -1,0 +1,82 @@
+.breed-select {
+    font-size: 30px;
+    padding: 5px;
+}
+
+.cat-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.cat_img {
+    margin-top: 60px;
+    max-width: 1000px;
+    max-height: 800px;
+}
+
+.cat_name {
+    font-size: 60px;
+    text-align: center;
+    font-family: sans-serif;
+}
+
+.cat_temp {
+    font-size: 35px;
+    text-align: center;
+    font-family: sans-serif;
+}
+
+.cat_desc {
+    font-size: 25px;
+    font-family: sans-serif;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.loader {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    background-color: rgba(0, 0, 0, 0.5);
+    transform: rotate(45deg);
+    overflow: hidden;
+
+    top: 50vh;
+    left: 50vw;
+}
+
+.loader:after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    margin: auto;
+    background: #222b32;
+}
+
+.loader:before {
+    content: '';
+    position: absolute;
+    inset: -15px;
+    margin: auto;
+    background: #de3500;
+    animation: diamondLoader 2s linear infinite;
+}
+
+@keyframes diamondLoader {
+
+    0%,
+    10% {
+        transform: translate(-64px, -64px) rotate(-45deg)
+    }
+
+    90%,
+    100% {
+        transform: translate(0px, 0px) rotate(-45deg)
+    }
+}
+
+.error {}
